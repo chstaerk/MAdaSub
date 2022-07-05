@@ -5,23 +5,31 @@ if (mychoice==2){
 	install.packages("RcppNumerical")
 	install.packages("BMS")
 	install.packages("BAS")
-	install.packages("parallel")
+#	install.packages("parallel")
 	install.packages("fda.usc")
 	install.packages("coda")
+	install.packages("mvnfast")
+	install.packages("Rfast")
+	install.packages("ggplot2")
+	install.packages("RColorBrewer")
+	install.packages("devtools")
+	devtools::install_github("albcab/scaleBVS")
 } 
 
 source("./Files/MAdaSub_LOAD.R")
 
 choices <-c( "Illustrative simulated example (Section 5.1) ", 
-             "Simulation study (Section 5.2) ", 
+             "Low-dimensional simulation study (Section 5.2) ", 
+             "High-dimensional simulation study (Section 5.3) ", 
              "Tecator data application (Section 6.1) ", 
              "PCR data application (Section 6.2) ", 
              "Leukemia data application (Section 6.3) ")
 mychoiceM <- menu( choices , graphics=TRUE, title="Which setting \n do you want to run?" )
 
 if (mychoiceM==1) source("./Files/MAdaSub_Low_gprior_with_correlation.R")
-if (mychoiceM==2) source("./Files/MAdaSub_Simulations.R")
-if (mychoiceM==3) {
+if (mychoiceM==2) source("./Files/MAdaSub_Lowdim_Simulations.R") 
+if (mychoiceM==3) source("./Files/MAdaSub_Highdim_Simulations.R") 
+if (mychoiceM==4) {
   choices <-c( "Multiple serial and parallel MAdaSub chains ",
                "One serial MAdaSub chain ")
   mychoiceMa <- menu( choices , graphics=TRUE, title="Which MAdaSub chains should be used?" )
@@ -30,7 +38,7 @@ if (mychoiceM==3) {
   if (mychoiceMa==2) source("./Files/MAdaSub_Tecator_data.R")
 }
 
-if (mychoiceM==4){  
+if (mychoiceM==5){  
 	# Example on PCR data 
 	# Please download the PCR data from JRSSB Datasets Vol. 77(5), Song and Liang (2015)
 	# Download file from https://wol-prod-cdn.literatumonline.com/pb-assets/hub-assets/rss/Datasets/Vol_77_2015-1521879345620.zip
@@ -51,7 +59,7 @@ if (mychoiceM==4){
 	
 } 
 
-if (mychoiceM==5) {
+if (mychoiceM==6) {
   mychoice <- menu( c("No","Yes"), graphics=TRUE, title="Install required libraries?" )
   
   if (mychoice==2){ 
