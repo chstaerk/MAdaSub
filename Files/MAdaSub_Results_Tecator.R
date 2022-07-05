@@ -19,10 +19,11 @@ parameter.list = results$parameter.list
 importance.individual = results$importance.individual 
 indices = 1:100
 
-size_axis <- 0.9
+size_axis <- 0.945
 
 par(mfrow = c(2,4))
 par(cex.main=1.5)
+par(cex.lab=1.3)
 par(mar=c(4, 4, 4, 1), mgp = c(2.5, 1, 0))
 
 boxplot(importance.individual[1,(frac.par.update*nb.k+1):nb.k,indices], ylim=c(0,1), names=indices,

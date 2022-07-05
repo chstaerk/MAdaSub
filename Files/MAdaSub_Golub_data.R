@@ -71,11 +71,11 @@ prior="EBIC" # posterior resulting from EBIC approximation
 ### Prior parameters #####
 const = 1 # constant for EBIC 
 
-choices <-c("2,500,000 iterations (as in paper)", "Custom number of iterations (should be a multiple of 50)")
+choices <-c("1,000,000 iterations (as in paper)", "Custom number of iterations (should be a multiple of 50)")
 mychoice <- menu( choices , graphics=TRUE, title="How many iterations per chain?" )
 
 if (mychoice==1) {
-  Iter = c(rep(50000,50)) 
+  Iter = c(rep(20000,50)) 
 }
 if (mychoice==2) {
   n_Iter = -1
@@ -89,8 +89,6 @@ if (mychoice==2) {
 
 
 #Iter = c(rep(50000,50)) # vector of number of iterations
-
-#Iter = 400000
 
 par(las=1,lwd=1,cex.main=1, cex.lab=1, cex.axis=1)
 
@@ -133,16 +131,15 @@ comp_time3 = as.numeric(difftime(end.time, start.time, units = "secs"))
 
 #getwd()
 #setwd("C://Users//Staerk//scieboBonn//MAdaSub PAPER//R Simulation Saves")
-#save(output, file="MAdaSub_Highdim_Golub_2Mio500K_q10.RData")
-#save(output2, file="MAdaSub_Highdim_Golub_2Mio500K_q5.RData")
-#save(output3, file="MAdaSub_Highdim_Golub_2Mio500K_q2.RData")
+save(output, file="MAdaSub_Highdim_Golub_1Mio_q10.RData")
+save(output2, file="MAdaSub_Highdim_Golub_1Mio_q5.RData")
+save(output3, file="MAdaSub_Highdim_Golub_1Mio_q2.RData")
 
 
 #########################################################################
-#load("./Files/R_simulation_saves/MAdaSub_Highdim_Golub_2Mio500K_q10.RData") # output
-#load("./Files/R_simulation_saves/MAdaSub_Highdim_Golub_2Mio500K_q5.RData")  # output2
-#load("./Files/R_simulation_saves/MAdaSub_Highdim_Golub_2Mio500K_q2.RData")  # output3
-
+#load("./Files/R_simulation_saves/MAdaSub_Highdim_Golub_1Mio_q10.RData") # output
+#load("./Files/R_simulation_saves/MAdaSub_Highdim_Golub_1Mio_q5.RData")  # output2
+#load("./Files/R_simulation_saves/MAdaSub_Highdim_Golub_1Mio_q2.RData")  # output3
 
 #which(output$relfreq.final>=0.5) # Median Probability model
 #output$best.S
@@ -162,6 +159,8 @@ dev.off()
 win.graph(width = 12, height = 6, pointsize = 10)
 par(cex.main=1.5)
 options(scipen=5)
+par(las=1,lwd=1, cex.lab=1.6, cex.axis=1.3)
+par(cex.main=1.6)
 
 # Scatterplots: Estimated marginal incl prob from different runs
 par(mfrow=c(1,3))
@@ -260,7 +259,8 @@ abline(a=0,b=1)
 
 par(cex.main=1.5)
 options(scipen=5)
-
+par(las=1,lwd=1, cex.lab=1.6, cex.axis=1.3)
+par(cex.main=1.6)
 
 
 ### Plot of sampled sizes of V^(t) and f(V^(t))

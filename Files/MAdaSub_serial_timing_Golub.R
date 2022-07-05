@@ -81,8 +81,8 @@ b_prior = (p-5)/5 # (p-5)/5
 #numCores <- detectCores()
 numCores = 50 #70
 nb.k = numCores
-repeats = 50 # 500 # 40
-M = 50000 # 20000 #  for Tecator data: M = 5000, for Golub and PCR data: M = 20000
+repeats = 50 
+M = 20000 
 burnin_rounds = 20
 
 frac.par.update = 0.5 # 0.5 # fraction of chains with parallel updating
@@ -111,7 +111,7 @@ for (i in 1:nb.k) {
 priormean <- priormean[[1]]
 L <- L[[1]]
 
-Iter = c(rep(50000,50))
+Iter = c(rep(20000,50))
 set.seed(22)
 start.time <- Sys.time()
 output=MAdaSub_wrapper(data,Iter=Iter,priormean=priormean, L=L,const=const,savings=savings,family=family,epsilon=epsilon,priorprob=priorprob,prior=prior,g=g,hyper=hyper,a_prior=a_prior,b_prior=b_prior,

@@ -1,8 +1,11 @@
 library("MASS")
 library("RcppNumerical")
-library("BMS")
+#library("BMS")
 library("BAS")
 library("parallel")
+
+library("mvnfast")
+library("Rfast")
 
 
 # MAdaSub algorithm (serial updating)
@@ -21,7 +24,6 @@ library("parallel")
 #        (2) set prior="gprior" for use of g-prior 
 #        (3) set prior="EBIC" for use of prior corresponding to EBIC 
 #        for family="binomial" or family="poisson" only prior choice (3) is available 
-#        for high-dimensional settings (p>n), please use prior (1) or (3)
 # g: constant for g-prior as well as independence prior (see also Remark 2.1 of paper)
 # hyper: set hyper=TRUE for use of hyper beta-binomial model prior 
 # a_prior: parameter a in beta-binomial model prior
@@ -46,10 +48,15 @@ library("parallel")
 # best.models: List of sampled models (of length Iter)
 # acc.prob: Vector (of length Iter) of current acceptance rates along the iterations  
 # acc: Absolute number of accepted Metropolis-Hastings moves
-MAdaSub <-function (data,Iter,priormean,L,const=0,savings=1,family="normal",epsilon=1e-06,priorprob,prior,g=NULL,hyper=FALSE,a_prior=NULL,b_prior=NULL,plot=TRUE,S.start=NULL, automatic.stop =FALSE, precision = 0.001) { 
+MAdaSub <-function (data,Iter,priormean,L,const=0,savings=1,family="normal",epsilon=1e-06,priorprob,prior,g=NULL,hyper=FALSE,a_prior=NULL,b_prior=NULL,plot=TRUE,S.start=NULL, automatic.stop =FALSE, precision = 0.001, burnin=0, s_max=NULL) { 
   
   p=ncol(data$x)
   n=nrow(data$x)
+  
+  if (is.null(s_max) & family =="normal" & prior=="EBIC") s_max = n-2
+  if (is.null(s_max) & family =="normal" & prior=="gprior") s_max = n-1
+  if (is.null(s_max) & family !="normal" & prior=="EBIC") s_max = n-1
+  if (is.null(s_max)) s_max = p
   
   relfreq=numeric(p)
   relfreq[1:p] = priormean
@@ -57,6 +64,7 @@ MAdaSub <-function (data,Iter,priormean,L,const=0,savings=1,family="normal",epsi
   CS=matrix(NA,p,floor(Iter/savings))
   
   CS.cur = numeric(p) #numeric(p)
+  CS.burnin = numeric(p) 
   
   V.size<- rep(NA,Iter) #numeric(Iter)
   S.size<- rep(NA,Iter) #numeric(Iter)
@@ -75,6 +83,7 @@ MAdaSub <-function (data,Iter,priormean,L,const=0,savings=1,family="normal",epsi
   
   acc.prob = rep(NA,Iter)  #numeric(Iter)
   acc = 0
+  acc.after.burnin = 0
   
   for (t in 1:Iter) {
     
@@ -84,25 +93,31 @@ MAdaSub <-function (data,Iter,priormean,L,const=0,savings=1,family="normal",epsi
     b = rbinom(p,1,relfreq)
     V = which(b==1)
     
-    if (prior=="EBIC"){
-      alpha = (-1/2)* EBIC_glm(data=data,indices=V,const=const,family=family) +
-        log_prob(indices=S,p=p,relfreq=relfreq) - 
-        (-1/2)* EBIC_glm(data=data,indices=S,const=const,family=family) -
-        log_prob(indices=V,p=p,relfreq=relfreq) 
-    }   else {
-      alpha =  marginal_log_like(data=data,indices=V,family=family,prior=prior,g=g) + 
-        log_modelprior(indices=V,p=p,priorprob=priorprob,hyper=hyper,a_prior=a_prior,b_prior=b_prior) +
-        log_prob(indices=S,p=p,relfreq=relfreq) - 
-        marginal_log_like(data=data,indices=S,family=family,prior=prior,g=g)  - 
-        log_modelprior(indices=S,p=p,priorprob=priorprob,hyper=hyper,a_prior=a_prior,b_prior=b_prior) -
-        log_prob(indices=V,p=p,relfreq=relfreq)
+    if (length(V)<=s_max)  { # reject V if length(V)>s_max
+      if (prior=="EBIC"){
+        alpha = (-1/2)* EBIC_glm(data=data,indices=V,const=const,family=family) +
+          log_prob(indices=S,p=p,relfreq=relfreq) - 
+          (-1/2)* EBIC_glm(data=data,indices=S,const=const,family=family) -
+          log_prob(indices=V,p=p,relfreq=relfreq) 
+      }   else {
+        alpha =  marginal_log_like(data=data,indices=V,family=family,prior=prior,g=g) + 
+          log_modelprior(indices=V,p=p,priorprob=priorprob,hyper=hyper,a_prior=a_prior,b_prior=b_prior) +
+          log_prob(indices=S,p=p,relfreq=relfreq) - 
+          marginal_log_like(data=data,indices=S,family=family,prior=prior,g=g)  - 
+          log_modelprior(indices=S,p=p,priorprob=priorprob,hyper=hyper,a_prior=a_prior,b_prior=b_prior) -
+          log_prob(indices=V,p=p,relfreq=relfreq)
+      }
+      u=log(runif(1))
+      
+      if (u<=alpha) { 
+        S = V 
+        acc = acc + 1
+        if (t > burnin) {
+          acc.after.burnin = acc.after.burnin + 1
+        }
+      }
     }
-    u=log(runif(1))
     
-    if (u<=alpha) { 
-      S = V 
-      acc = acc + 1
-    }
     
     if (prior=="EBIC"){
       values[t] = (-1/2) * EBIC_glm(data=data,indices=S,const=const,family=family) } else {
@@ -118,6 +133,8 @@ MAdaSub <-function (data,Iter,priormean,L,const=0,savings=1,family="normal",epsi
     if (t %% savings == 0) {
       CS[,t/savings] = CS.cur
     }
+    
+    if (t==burnin) CS.burnin <- CS.cur
     
     if (values[t]==max(values[1:t])) best.S = S
     
@@ -141,8 +158,11 @@ MAdaSub <-function (data,Iter,priormean,L,const=0,savings=1,family="normal",epsi
   
   
   importance.hist = CS/helpmat 
-  importance.final = CS.cur/Iter
   
+  importance.final = (CS.cur-CS.burnin)/(Iter-burnin)
+  #importance.final = CS.cur/Iter
+  
+  acc.prob.after.burnin <- acc.after.burnin / (Iter-burnin)
   
   relfreq.hist=(L*priormean + CS)/(L+helpmat) 
   relfreq.final = relfreq
@@ -167,7 +187,8 @@ MAdaSub <-function (data,Iter,priormean,L,const=0,savings=1,family="normal",epsi
               acc=acc, 
               CS=CS, 
               CS.cur=CS.cur, 
-              S=S))
+              S=S,
+              acc.prob.after.burnin=acc.prob.after.burnin))
 }
 
 # MAdaSub algorithm with parallel updating
@@ -195,7 +216,7 @@ MAdaSub <-function (data,Iter,priormean,L,const=0,savings=1,family="normal",epsi
 # models_parallel: sampled models for chains with parallel updating 
 # models_serial: sampled models for chains with serial updating 
 MAdaSub_parallel <- function (data,nb.k=2,M=10000,repeats=10,priormean,L,const=0,savings=1,family="normal",epsilon=1e-06,priorprob,prior,g=NULL,hyper=FALSE,a_prior=NULL,b_prior=NULL,
-                              frac.par.update=1, burnin_rounds = 1, save_workers = 0) { 
+                              frac.par.update=1, burnin_rounds = 1, save_workers = 0, numCores = 1) { 
   p=ncol(data$x)
   
   parameter.list = vector("list", length = nb.k)
@@ -245,7 +266,8 @@ MAdaSub_parallel <- function (data,nb.k=2,M=10000,repeats=10,priormean,L,const=0
     
     results.cur = mclapply(parameter.list, f_parallel, mc.cores = numCores, 
                            data=data ,M=M ,const=const ,savings=savings ,family=family ,epsilon=epsilon ,priorprob=priorprob,prior=prior,g=g,hyper=hyper,a_prior=a_prior,b_prior=b_prior,
-                           mc.set.seed = TRUE,  mc.preschedule = FALSE )
+                           mc.set.seed = TRUE,  mc.preschedule = TRUE )
+    skip.streams(3) # continue with random seeds
     
     #results[[r]] <- results.cur
     
@@ -372,12 +394,19 @@ marginal_log_like <- function(data,indices,family="normal",prior="gprior",g){
   #      m= - (n-1)/2 * log( sum((y-ybar)^2) - t(y)%*% y)   }
   #return(m)
   if (prior=="gprior") {
-    data.cur = data
-    data.cur$x = data$x[,indices]
-    dataf = as.data.frame(data.cur)
-    out = zlm(y~.,data=dataf)
-    return(out$marg.lik)
+    s <- length(indices)
+    fitted_lm <- lmfit(cbind(1, data$x[,indices]), data$y)
+    R_squared <- 1 - sum(fitted_lm$residuals^2) / sum((data$y-mean(data$y))^2)
+    marginal <- (n-s-1)/2 * log(1+g) - (n-1)/2 * log((1+g*(1-R_squared)))
+    return(marginal)
   }
+  #if (prior=="gprior") {
+  #  data.cur = data
+  #  data.cur$x = data$x[,indices]
+  #  dataf = as.data.frame(data.cur)
+  #  out = zlm(y~.,data=dataf)
+  #  return(out$marg.lik)
+  #}
   if (prior=="independence"){
     s = length(indices)
     n = length(data$y)
@@ -452,7 +481,8 @@ simdata <- function (n,p,beta,corr=0,family="normal",sigma.normal=1,corr.type="g
     Sigma=toeplitz(help)
   }
   
-  x = mvrnorm(n , mu, Sigma)
+  if (p<=200) x = mvrnorm(n , mu, Sigma) else x = rmvn(n, mu, Sigma)
+  #x = mvrnorm(n , mu, Sigma)
   
   linpred=x%*%beta
   
@@ -473,4 +503,13 @@ simdata <- function (n,p,beta,corr=0,family="normal",sigma.normal=1,corr.type="g
   
   return(list(x=x,y=y))
 }
+
+## helper for random seeds in parallel version
+skip.streams <- function(n) {
+  x <- .Random.seed
+  for (i in seq_len(n))
+    x <- nextRNGStream(x)
+  assign('.Random.seed', x, pos=.GlobalEnv)
+}
+
 

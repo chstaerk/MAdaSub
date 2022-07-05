@@ -50,11 +50,12 @@ b_prior = (p-5)/5 # (p-5)/5
 par(las=1,lwd=1,cex.main=1, cex.lab=1, cex.axis=1)
 
 
-choices <-c("200,000 iterations (as in paper)", "Custom number of iterations (should be a multiple of 10)")
+choices <-c("290,000 iterations (as in Supplement)", "Custom number of iterations (should be a multiple of 10)")
 mychoice <- menu( choices , graphics=TRUE, title="How many iterations per chain?" )
 
 if (mychoice==1) {
   Iter = c(rep(5000,20),190000)
+  n_Iter = 290000
 }
 if (mychoice==2) {
   n_Iter = -1

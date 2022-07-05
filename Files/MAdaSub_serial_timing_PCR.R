@@ -8,10 +8,10 @@ source("MAdaSub_LOAD.R")
 # rescaled data
 #X = t( read.table("C:\\Users\\Staerk\\sciebo\\JASA Submission\\Data and R files for Real Data Examples\\data_and_code\\file\\data\\PCR\\Xgenes.txt") )
 # original data
-X = t( read.table("Xgene.txt") )
+X = t( read.table("./Files/Xgene.txt") )
 X = scale(X, scale = FALSE) # just center the covariates
-Y = scan("Y3.txt")
-Xnames = scan("gene_id.txt",what=character())
+Y = scan("./Files/Y3.txt")
+Xnames = scan("./Files/gene_id.txt",what=character())
 data=list()
 data$x = X 
 colnames(data$x) = Xnames
@@ -49,7 +49,7 @@ numCores <- detectCores()
 numCores = 50 #70
 nb.k = numCores
 repeats = 50
-M = 50000 #  for Tecator data: M = 5000, for PCR data: M = 20000
+M = 20000 
 burnin_rounds = 20
 
 frac.par.update = 0.5 # fraction of chains with parallel updating
@@ -85,7 +85,7 @@ for (i in 1:nb.k) {
 priormean <- priormean[[1]]
 L <- L[[1]]
 
-Iter = c(rep(50000,50))
+Iter = c(rep(20000,50))
 set.seed(22)
 start.time <- Sys.time()
 output=MAdaSub_wrapper(data,Iter=Iter,priormean=priormean, L=L,const=const,savings=savings,family=family,epsilon=epsilon,priorprob=priorprob,prior=prior,g=g,hyper=hyper,a_prior=a_prior,b_prior=b_prior,
@@ -96,6 +96,7 @@ comp_time = as.numeric(difftime(end.time, start.time, units = "secs"))
 
 save(comp_time, file="MAdaSub_serial_timing_PCR.RData")
 
+load("MAdaSub_serial_timing_PCR.RData")
 
 #results = mclapply(parameter.list, f_parallel, mc.cores = numCores, 
 #                   data=data ,M=M ,const=const ,savings=savings ,family=family ,epsilon=epsilon ,priorprob=priorprob,prior=prior,g=g,hyper=hyper,a_prior=a_prior,b_prior=b_prior,

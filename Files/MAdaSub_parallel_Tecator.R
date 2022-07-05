@@ -58,8 +58,6 @@ if (mychoice==2) {
 }
 
 #numCores <- detectCores()
-#numCores = 50 
-
 
 choices <-c( "50 chains (as in paper)                    ", 
              "Custom number of chains                    ")
@@ -76,8 +74,6 @@ if (mychoice==2) {
     if(is.na(nb.k)){break}  # breaks when hit enter
   }
 }
-
-#nb.k = numCores
 
 choices <-c( "58 rounds (as in paper)                                          ", 
              "Custom number of rounds                                          ")
@@ -128,6 +124,8 @@ if (mychoice==2) {
   }
 }
 
+#nb.k = 50
+#numCores = 50 
 #repeats = 58
 #M = 5000 #  
 #burnin_rounds = 20
@@ -138,7 +136,7 @@ frac.par.update = 0.5 # fraction of chains with parallel updating
 # if frac.par.update = 0, independent chains (no parallel updating)
 
 RNGkind("L'Ecuyer-CMRG")
-set.seed(1)
+set.seed(21)
 
 ###
 priormean <- list()
@@ -153,17 +151,16 @@ for (i in 1:nb.k) {
 #L = p
 ###
 
-RNGkind("L'Ecuyer-CMRG")
 set.seed(1)
 
 start.time <- Sys.time()
 results = MAdaSub_parallel(data=data,nb.k=nb.k,M=M,repeats=repeats,priormean=priormean,L=L,const=const,savings=savings,family=family,epsilon=epsilon,priorprob=priorprob,prior=prior,g=g,hyper=FALSE,a_prior=NULL,b_prior=NULL,
-                           frac.par.update=frac.par.update, burnin_rounds=burnin_rounds) 
+                           frac.par.update=frac.par.update, burnin_rounds=burnin_rounds, numCores=numCores) 
 end.time <- Sys.time()
 time = as.double(end.time-start.time, units = "secs")
 
 results$time = time
-#save(results, file="MAdaSub_results_Tecator_random_q_2_10_L_05_2p_epsilon.RData")
+save(results, file="MAdaSub_results_Tecator_random_q_2_10_L_05_2p_epsilon.RData")
 
 
 parameter.list = results$parameter.list 

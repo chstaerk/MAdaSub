@@ -197,8 +197,8 @@ MC3 <-function (data,Iter,priormean,L,const=0,savings=1,family="normal",epsilon=
       #print(t)
       par(mfrow=c(1,1))
       plot(values,pch=20,main="MAdaSub" ,xlab="Iter",ylab="value")
-      abline(h=EBIC_glm(data,which(relfreq>0.5),const,family=family),col="blue")
-      abline(h=EBIC_glm(data,which(relfreq>0.9),const,family=family),col="red")
+      #abline(h=EBIC_glm(data,which(relfreq>0.5),const,family=family),col="blue")
+      #abline(h=EBIC_glm(data,which(relfreq>0.9),const,family=family),col="red")
     }
   }
   
@@ -234,7 +234,7 @@ set.seed(22)
 data=simdata(n,p,beta=beta1,corr= corr,family=family,sigma.normal=sigma.normal,blocks=blocks, corr.type=corr.type)
 
 
-print("Please wait a few minutes until all algorithms have been completed...")
+print("Please wait a minute until all algorithms have been completed...")
 
 ##################################################################
 # Begin MAdaSub algo
@@ -390,8 +390,9 @@ dev.off()
 win.graph(width = 10, height = 6, pointsize = 10)
 
 font = 1
-par(las=1,lwd=1,cex.main=font, cex.lab=font, cex.axis=font)
-par(cex.main=1.5)
+par(las=1,lwd=1,cex.main=font, cex.lab=1.8, cex.axis=1.5)
+par(cex.main=2)
+par(mar=c(5, 4, 4, 1), mgp = c(2.5, 1, 0))
 par(las=1)
 options(scipen=5)
 
@@ -435,6 +436,8 @@ points(outputMC3$S.size[plotIter],col='red',pch=20,cex=0.7)
 ### Plot of acceptance rate
 win.graph(width = 10, height = 6, pointsize = 10)
 par(mfrow=c(1,1))
+par(las=1,lwd=1,cex.main=font, cex.lab=1.6, cex.axis=1.4)
+par(cex.main=1.6)
 par(las=1)
 par(mar=c(4, 4, 4, 1))
 plot(output$acc.prob,pch=20,ylim=c(0,1),xlab="Iteration",ylab="", main="Acceptance rate",lwd=2, type="l")
@@ -452,11 +455,13 @@ legend(1000, 1,
          "Non-adaptive (posterior)", 
          "MAdaSub (L=p/n)",
          "MC3", 
-         "MadaSub (L=100p)"),
+         "MAdaSub (L=100p)"),
        col = c("blue", "black", "red", "orange", "gray", "purple"),
        lty=1,
        ncol=3,
-       lwd=2)
+       lwd=2,
+       cex=1.3,
+       pt.cex = 1)
 
 
 #plot(output$relfreq.final, output_PO$relfreq.final)
@@ -485,7 +490,7 @@ m <- matrix(c(1,2,3,4,5,6,7,8,9,10,10,10),nrow = 4,ncol = 3,byrow = TRUE)
 layout(mat = m, heights = c(0.3,0.3,0.3,0.1))
 ############################################################################
 
-par(mar=c(4, 2.5, 3, 1), mgp = c(2.5, 1, 0))
+par(mar=c(4, 3, 3, 1), mgp = c(2.5, 1, 0))
 par(las=1)
 
 
@@ -519,6 +524,8 @@ layout(mat = m, heights = c(0.3,0.3,0.3,0.1))
 ############################################################################
 
 par(mar=c(4, 2.5, 3, 1), mgp = c(2.5, 1, 0))
+par(las=1,lwd=1,cex.main=font, cex.lab=1.6, cex.axis=1.3)
+par(cex.main=1.6)
 par(las=1)
 zehner=0
 for (i in 1:9){
